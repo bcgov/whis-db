@@ -1,0 +1,7 @@
+*.log
+*.swp
+*.zip
+*.tgz
+~*
+openshift/postgis-secrets.yaml
+psql_commands.sql

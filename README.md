@@ -1,29 +1,34 @@
-# Application Name
+![Lifecycle: Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)
 
-## What am I?
+## Wildlife Health Information System (WHIS)
 
-I am a template repo for use by the platform services team to encourage consistency in documentation and repo layout. For those using me, do not feel like you are *required* to adhere to this layout if you feel something better would suit the needs of your application or service. Find more information about this template [here](https://github.com/bcgov-c/platform-services-docs/blob/main/repo-organization.md)
+Minimal Postresql 12 and PostGIS 3.0 Docker setup.
 
-**Sadly, topics are not automatically imported when creating a repository from a template. Ensure you include the following topics:**
-- `citz`
-- `devops`
-- `platform-services`
-- `supported` / `unsupported`
-- plus any additional topics that may be appropriate
+### Downloading and Building
+```bash
+git clone https://github.com/bcgov/whis-db.git
+cd whis-db
+docker build --tag whis-db:1.0 .
+```
 
-Please use this README as a template for your own README, including all the same information, as appropriate.
+### Running Locally
+If you have environment variables currently set for the database environment you can do the following. Otherwise substitute in your configuration.
+```bash
+docker run \
+  --publish 5432:5432 \
+  --detach \
+  --name whis-db \
+  --env POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+  --env POSTGRES_USER=$POSTGRES_USER \
+  --env POSTGRES_DB=$POSTGRES_DB \
+  whis-db:1.0
+```
 
-Consider including your namespace name(s) in this section, so others supporting this tool know where to look.
+Now you can connect locally.
+```bash
+psql -h localhost -p 5432 $POSTGRES_DB $POSTGRES_USER
+```
 
-## Contact Info
+## OpenShift ##
 
-Relevant rocketchat channels, maybe some outside docs, vendor support portals, etc.
-
-## Vendor Info
-
-If this is a deployment of a vendored product, include some links to relevant repos and documentation.
-
-## Repo Overview
-
-Tell me where to find important stuff in this repo and provide some info about the layout.
-
+OpenShift details including build, deployment and pipelines are in the [openshift](openshift/README.md) folder.
