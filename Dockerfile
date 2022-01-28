@@ -1,6 +1,6 @@
 # Grabbing directly from the bcgov maintained patroni image.
 # For details, see: https://github.com/bcgov/patroni-postgres-container/
-FROM image-registry.openshift-image-registry.svc:5000/bcgov/patroni-postgres:12.4-latest
+FROM image-registry.openshift-image-registry.svc:5000/bcgov/postgres:12.4
 
 ENV POSTGIS_MAJOR 3
 ENV POSTGIS_VERSION 3.2.0+dfsg-1.pgdg100+1
@@ -17,9 +17,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Add the POSTGIS command to the end of the post_init script.
-COPY init_postgis /usr/share/scripts/patroni/
-RUN cat /usr/share/scripts/patroni/init_postgis >> /usr/share/scripts/patroni/post_init.sh
-RUN rm /usr/share/scripts/patroni/init_postgis
+#COPY init_postgis /usr/share/scripts/patroni/
+#RUN cat /usr/share/scripts/patroni/init_postgis >> /usr/share/scripts/patroni/post_init.sh
+#RUN rm /usr/share/scripts/patroni/init_postgis
 
 # Switch back to default user
 USER 1001
