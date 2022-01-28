@@ -171,13 +171,13 @@ objects:
       strategy:
         type: Docker
         dockerStrategy:
-          dockerfilePath: Dockerfile-ocp4
+          dockerfilePath: Dockerfile
       postCommit: {}
       source:
         type: Git
         git:
           uri: 'https://github.com/bcgov/whis-db.git'
-          ref: ocp4
+          ref: main
         secrets:
           - secret:
               name: etc-pki-entitlement

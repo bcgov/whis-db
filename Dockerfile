@@ -1,4 +1,4 @@
-FROM postgres:12
+FROM postgres:12-alpine
 
 # This is our time zone
 ENV TZ America/Vancouver

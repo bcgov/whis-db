@@ -7,26 +7,22 @@ objects:
 - kind: Secret
   apiVersion: v1
   metadata:
-    name: whis
-    annotations:
-      secret-generator.v1.mittwald.de/autogenerate: password
-  data:
+    name: whis    
+  stringData:
     username: whis
+    password: "${DATABASE_PASSWORD}"
 - kind: PersistentVolumeClaim
   apiVersion: v1
   metadata:
     annotations:
-      volume.beta.kubernetes.io/storage-class: netapp-block-standard
-    selfLink: /api/v1/namespaces/0dff19-dev/persistentvolumeclaims/whis-data
+      volume.beta.kubernetes.io/storage-class: netapp-block-standard    
     name: whis-data  
-  finalizers:
-    - kubernetes.io/pvc-protection
   spec:
     accessModes:
-      - ReadWriteOnce
+      - ReadWriteMany
     resources:
       requests:
-        storage: 6G
+        storage: 10G
     volumeMode: Filesystem
 - kind: DeploymentConfig
   apiVersion: apps.openshift.io/v1
@@ -55,8 +51,8 @@ objects:
             - whis-db
           from:
             kind: ImageStreamTag
-            namespace: 0dff19-tools
-            name: 'postgres-postgis:latest'        
+            namespace: ${IMAGE_NAMESPACE}
+            name: postgres-postgis:latest       
     replicas: 1
     revisionHistoryLimit: 10
     test: false
@@ -83,17 +79,17 @@ objects:
             terminationMessagePath: /dev/termination-log
             name: whis-db
             env:
-              - name: POSTGRESQL_PASSWORD
+              - name: POSTGRES_PASSWORD
                 valueFrom:
                   secretKeyRef:
                     name: whis
                     key: password
-              - name: POSTGRESQL_USER
+              - name: POSTGRES_USER
                 valueFrom:
                   secretKeyRef:
                     name: whis
                     key: username
-              - name: POSTGRESQL_DATABASE
+              - name: POSTGRES_DATABASE
                 value: whis
             ports:
               - containerPort: 5432
@@ -101,7 +97,7 @@ objects:
             imagePullPolicy: Always
             volumeMounts:
               - name: volume-qvg1l
-                mountPath: /var/lib/pgsql/data
+                mountPath: /var/lib/postgresql/data
             terminationMessagePolicy: File
         restartPolicy: Always
         terminationGracePeriodSeconds: 30
@@ -141,7 +137,7 @@ parameters:
   displayName: Image Namespace
   description: The namespace of the OpenShift project containing the imagestream for the application.
   required: true
-  value: 0dff19-tools
+  value: 314c0c-tools
 - name: TAG_NAME
   displayName: Environment TAG name
   description: The TAG name for this environment, e.g., dev, test, prod
@@ -162,4 +158,9 @@ parameters:
 - name: MEMORY_LIMIT
   displayName: Memory Limit
   description: Maximum amount of memory the container can use.
-  value: 512Mi   
+  value: 512Mi
+- name: DATABASE_PASSWORD
+  generate: expression
+  from: "[a-zA-Z0-9]{16}"
+  required: true
+   
