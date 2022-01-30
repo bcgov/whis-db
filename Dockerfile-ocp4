@@ -1,4 +1,4 @@
-FROM openshift/postgresql-12-el7
+FROM openshift/postgresql:12-el7
 
 # PostgreSQL image for OpenShift with PostGIS extension.
 # Volumes:
