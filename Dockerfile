@@ -1,6 +1,6 @@
 # Grabbing directly from the bcgov maintained patroni image.
 # For details, see: https://github.com/bcgov/patroni-postgres-container/
-FROM image-registry.apps.silver.devops.gov.bc.ca/bcgov/patroni-postgres
+FROM image-registry.apps.silver.devops.gov.bc.ca/bcgov/patroni-postgres:12.4-latest
 
 ENV POSTGIS_MAJOR 3
 ENV POSTGIS_VERSION 3.2.0+dfsg-1.pgdg100+1
