@@ -1,0 +1,458 @@
+{
+  "apiVersion": "template.openshift.io/v1",
+  "kind": "Template",
+  "metadata": {
+    "annotations": {
+      "description": "Patroni Postgresql database cluster, with persistent storage.",
+      "iconClass": "icon-postgresql",
+      "openshift.io/display-name": "Patroni Postgresql (Persistent)",
+      "openshift.io/long-description": "This template deploys a patroni postgresql HA cluster with persistent storage.",
+      "tags": "postgresql"
+    },
+    "name": "patroni-pgsql-persistent"
+  },
+  "labels": {
+    "app": "${NAME}-${COMPONENT}",
+    "phase": "deploy",
+    "app.kubernetes.io/instance": "${NAME}-${COMPONENT}",
+    "app.kubernetes.io/component": "database",
+    "app.kubernetes.io/name": "patroni",
+    "app.kubernetes.io/managed-by": "template"
+  },
+  "objects": [
+    {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+          "name": "${NAME}-patroni-db-image",
+          "labels": {
+            "shared": "true"
+          }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "creationTimestamp": null,
+        "labels": {
+          "cluster-name": "${NAME}-${COMPONENT}"
+        },
+        "name": "${NAME}-${COMPONENT}"
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 5432,
+            "protocol": "TCP",
+            "targetPort": 5432
+          }
+        ],
+        "selector": {
+          "cluster-name": "${NAME}-${COMPONENT}",
+          "role": "master",
+          "app.kubernetes.io/name": "patroni"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+      },
+      "status": {
+        "loadBalancer": {}
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "creationTimestamp": null,
+        "generation": 3,
+        "labels": {
+          "cluster-name": "${NAME}-${COMPONENT}"
+        },
+        "name": "${NAME}-${COMPONENT}"
+      },
+      "spec": {
+        "podManagementPolicy": "OrderedReady",
+        "replicas": "${{REPLICAS}}",
+        "revisionHistoryLimit": 10,
+        "selector": {
+          "matchLabels": {
+            "statefulset": "${NAME}-${COMPONENT}"
+          }
+        },
+        "serviceName": "${NAME}-${COMPONENT}",
+        "template": {
+          "metadata": {
+            "creationTimestamp": null,
+            "labels": {
+              "statefulset": "${NAME}-${COMPONENT}",
+              "cluster-name": "${NAME}-${COMPONENT}",
+              "app.kubernetes.io/name": "patroni"
+            }
+          },
+          "spec": {
+            "affinity": {
+              "podAntiAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": [
+                  {
+                    "labelSelector": {
+                      "matchExpressions": [
+                        {
+                          "key": "statefulset",
+                          "operator": "In",
+                          "values": [
+                            "${NAME}-${COMPONENT}"
+                          ]
+                        }
+                      ]
+                    },
+                    "topologyKey": "kubernetes.io/hostname"
+                  }
+                ]
+              }
+            },
+            "volumes": [
+              {
+                "name": "dshm",
+                "emptyDir": {
+                  "medium": "Memory",
+                  "sizeLimit": "128Mi"
+                }
+              }
+            ],
+            "containers": [
+              {
+                "env": [
+                  {
+                    "name": "POD_IP",
+                    "valueFrom": {
+                      "fieldRef": {
+                        "apiVersion": "v1",
+                        "fieldPath": "status.podIP"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PATRONI_KUBERNETES_NAMESPACE",
+                    "valueFrom": {
+                      "fieldRef": {
+                        "apiVersion": "v1",
+                        "fieldPath": "metadata.namespace"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PATRONI_KUBERNETES_LABELS",
+                    "value": "{\"cluster-name\": \"${NAME}-${COMPONENT}\", \"app.kubernetes.io/name\": \"patroni\"}"
+                  },
+                  {
+                    "name": "PATRONI_SUPERUSER_USERNAME",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "superuser-username",
+                        "name": "${NAME}-${COMPONENT}-${VERSION}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PATRONI_SUPERUSER_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "superuser-password",
+                        "name": "${NAME}-${COMPONENT}-${VERSION}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PATRONI_REPLICATION_USERNAME",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "replication-username",
+                        "name": "${NAME}-${COMPONENT}-${VERSION}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PATRONI_REPLICATION_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "replication-password",
+                        "name": "${NAME}-${COMPONENT}-${VERSION}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_USER",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "database-user",
+                        "name": "${NAME}-${COMPONENT}-${VERSION}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "database-password",
+                        "name": "${NAME}-${COMPONENT}-${VERSION}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_DATABASE",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "database-name",
+                        "name": "${NAME}-${COMPONENT}-${VERSION}"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PATRONI_SCOPE",
+                    "value": "${NAME}-${COMPONENT}"
+                  },
+                  {
+                    "name": "PATRONI_NAME",
+                    "valueFrom": {
+                      "fieldRef": {
+                        "apiVersion": "v1",
+                        "fieldPath": "metadata.name"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PATRONI_LOG_LEVEL",
+                    "value": "ERROR"
+                  },
+                  {
+                    "name": "PATRONI_POSTGRESQL_DATA_DIR",
+                    "value": "/home/postgres/pgdata/pgroot/data"
+                  },
+                  {
+                    "name": "PATRONI_POSTGRESQL_PGPASS",
+                    "value": "/tmp/pgpass"
+                  },
+                  {
+                    "name": "PATRONI_POSTGRESQL_LISTEN",
+                    "value": "0.0.0.0:5432"
+                  },
+                  {
+                    "name": "PATRONI_RESTAPI_LISTEN",
+                    "value": "0.0.0.0:8008"
+                  },
+                  {
+                    "name": "POSTGRESQL_MAX_CONNECTIONS",
+                    "value": "1000"
+                  },
+                  {
+                    "name": "TZ",
+                    "value": "Canada/Pacific"
+                  }
+                ],
+                "image": "${IMAGE_REGISTRY}/314c0c-tools/postgres-postgis:latest",
+                "imagePullPolicy": "Always",
+                "name": "postgresql",
+                "ports": [
+                  {
+                    "containerPort": 8008,
+                    "protocol": "TCP"
+                  },
+                  {
+                    "containerPort": 5432,
+                    "protocol": "TCP"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "${CPU_REQUEST}",
+                    "memory": "${MEMORY_REQUEST}"
+                  },
+                  "limits": {
+                    "cpu": "${CPU_LIMIT}",
+                    "memory": "${MEMORY_LIMIT}"
+                  }
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "readinessProbe": {
+                  "initialDelaySeconds": 5,
+                  "timeoutSeconds": 5,
+                  "failureThreshold": 4,
+                  "exec": {
+                    "command": [
+                      "/usr/share/scripts/patroni/health_check.sh"
+                    ]
+                  }
+                },
+                "volumeMounts": [
+                  {
+                    "mountPath": "/home/postgres/pgdata",
+                    "name": "postgresql"
+                  },
+                  {
+                    "mountPath": "dev/shm",
+                    "name": "dshm"
+                  }
+                ]
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Always",
+            "schedulerName": "default-scheduler",
+            "securityContext": {},
+            "serviceAccountName": "whis-db",
+            "terminationGracePeriodSeconds": 0
+          }
+        },
+        "updateStrategy": {
+          "type": "RollingUpdate"
+        },
+        "volumeClaimTemplates": [
+          {
+            "metadata": {
+              "annotations": {
+                "volume.beta.kubernetes.io/storage-class": "${STORAGE_CLASS}"
+              },
+              "labels": {
+                "app": "${NAME}-${COMPONENT}"
+              },
+              "name": "postgresql"
+            },
+            "spec": {
+              "storageClassName": "${STORAGE_CLASS}",
+              "accessModes": [
+                "ReadWriteOnce"
+              ],
+              "resources": {
+                "requests": {
+                  "storage": "${PVC_SIZE}"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "APP",
+      "displayName": "App",
+      "description": "The application name assigned to all of the objects defined in this template.  You should keep this as default unless your know what your doing.",
+      "required": true,
+      "value": "whis"
+    },
+    {
+      "name": "COMPONENT",
+      "displayName": "Component",
+      "description": "The Component name assigned to all of the objects defined in this template.  You should keep this as default unless your know what your doing.",
+      "required": true,
+      "value": "db"
+    },
+    {
+      "name": "NAME",
+      "displayName": "Name",
+      "description": "The name assigned to all of the OpenShift resources associated to the PostgreSQL instance.",
+      "required": true,
+      "value": "whis"
+    },
+    {
+      "name": "HOST",
+      "displayName": "Hostname ",
+      "description": "Hostname",	 
+      "required": true,
+	  "value": "test"
+    },
+    {
+      "name": "VERSION",
+      "displayName": "Application version number",
+      "description": "Application version number",
+	  "value": "latest",
+      "required": true
+    },
+    {
+      "name": "SUFFIX",
+      "displayName": "Application name suffix",
+      "description": "Application name suffix",
+	  "value": "db",
+      "required": true
+    },
+    {
+      "name": "PHASE",
+      "displayName": "Application phase",
+      "description": "Application phase",
+	  "value": "test",
+      "required": true
+    },
+    {
+      "name": "REPLICAS",
+      "displayName": "REPLICAS",
+      "description": "The number of statefulSet replicas to use.",
+	  "value":"1"
+    },
+    {
+      "description": "Starting amount of CPU the container can use.",
+      "displayName": "CPU REQUEST",
+      "name": "CPU_REQUEST",
+      "value": "250m"
+    },
+    {
+      "description": "Maximum amount of CPU the container can use.",
+      "displayName": "CPU Limit",
+      "name": "CPU_LIMIT",
+      "value": "600m"
+    },
+    {
+      "description": "Starting amount of memory the container can use.",
+      "displayName": "Memory Request",
+      "name": "MEMORY_REQUEST",
+      "value": "256Mi"
+    },
+    {
+      "description": "Maximum amount of memory the container can use.",
+      "displayName": "Memory Limit",
+      "name": "MEMORY_LIMIT",
+      "value": "512Mi"
+    },
+    {
+      "name": "IMAGE_STREAM_NAMESPACE",
+      "description": "The OpenShift Namespace where the patroni and postgresql ImageStream resides.",
+      "displayName": "ImageStream Namespace",
+	  "value":"0137d5-tools"
+    },
+    {
+      "name": "IMAGE_STREAM_TAG",
+      "description": "Patroni ImageTag"
+    },
+    {
+      "description": "The size of the persistent volume to create.",
+      "displayName": "Persistent Volume Size",
+      "name": "PVC_SIZE",
+      "value": "5Gi"
+    },
+    {
+      "name": "STORAGE_CLASS",
+      "value": "netapp-block-standard"
+    },
+    {
+      "name": "IMAGE_REGISTRY",
+      "value": "image-registry.apps.silver.devops.gov.bc.ca"
+    },
+    {
+      "name": "CHANGE_ID",
+      "description": "Change ID",
+      "required": false
+    },
+    {
+      "name": "GITHUB_REPO",
+      "description": "GITHUB REPO",
+      "required": false
+    },
+    {
+      "name": "GITHUB_OWNER",
+      "description": "GITHUB OWNER",
+      "required": false
+    }
+  ]
+}
