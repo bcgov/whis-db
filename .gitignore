@@ -5,3 +5,4 @@
 ~*
 openshift/postgis-secrets.yaml
 psql_commands.sql
+.idea

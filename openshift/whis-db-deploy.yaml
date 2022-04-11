@@ -7,7 +7,7 @@ objects:
 - kind: Secret
   apiVersion: v1
   metadata:
-    name: whis    
+    name: whis
   stringData:
     username: whis
     password: "${DATABASE_PASSWORD}"
@@ -15,8 +15,8 @@ objects:
   apiVersion: v1
   metadata:
     annotations:
-      volume.beta.kubernetes.io/storage-class: netapp-block-standard    
-    name: whis-data  
+      volume.beta.kubernetes.io/storage-class: netapp-block-standard
+    name: whis-data
   spec:
     accessModes:
       - ReadWriteMany
@@ -28,11 +28,7 @@ objects:
   apiVersion: apps.openshift.io/v1
   metadata:
     annotations:
-      kubectl.kubernetes.io/last-applied-configuration: >
-        {"apiVersion":"apps.openshift.io/v1","kind":"DeploymentConfig","metadata":{"annotations":{},"labels":{"app":"whis-db"},"name":"whis-db","namespace":"0dff19-dev"},"spec":{"replicas":1,"selector":{"app":"whis-db","deploymentconfig":"whis-db"},"strategy":{"type":"Recreate"},"template":{"metadata":{"creationTimestamp":null,"labels":{"app":"whis-db","deploymentconfig":"whis-db"}},"spec":{"containers":[{"env":[{"name":"POSTGRESQL_PASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"whis"}}},{"name":"POSTGRESQL_USER","valueFrom":{"secretKeyRef":{"key":"username","name":"whis"}}},{"name":"POSTGRESQL_DATABASE","value":"whis"}],"image":"
-        ","imagePullPolicy":"Always","name":"whis-db","ports":[{"containerPort":5432,"protocol":"TCP"}],"resources":{"limits":{"memory":"2Gi"},"requests":{"memory":"1Gi"}},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File","volumeMounts":[{"mountPath":"/var/lib/pgsql/data","name":"volume-qvg1l"}]}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30,"volumes":[{"name":"volume-qvg1l","persistentVolumeClaim":{"claimName":"whis-data"}}]}},"test":false,"triggers":[{"type":"ConfigChange"},{"imageChangeParams":{"automatic":true,"containerNames":["whis-db"],"from":{"kind":"ImageStreamTag","name":"postgres-postgis:latest","namespace":"0dff19-tools"}},"type":"ImageChange"}]}}
-    name: whis-db    
-    generation: 3
+    name: whis-db
     labels:
       app: whis-db
   spec:
@@ -52,7 +48,7 @@ objects:
           from:
             kind: ImageStreamTag
             namespace: ${IMAGE_NAMESPACE}
-            name: postgres-postgis:latest       
+            name: postgres-postgis:latest
     replicas: 1
     revisionHistoryLimit: 10
     test: false
@@ -103,7 +99,7 @@ objects:
         terminationGracePeriodSeconds: 30
         dnsPolicy: ClusterFirst
         securityContext: {}
-        schedulerName: default-scheduler 
+        schedulerName: default-scheduler
 - kind: Service
   apiVersion: v1
   metadata:
@@ -132,7 +128,7 @@ parameters:
   displayName: Source Image Name
   description: The name of the image to use for this resource.
   required: true
-  value: whis-ui 
+  value: whis-ui
 - name: IMAGE_NAMESPACE
   displayName: Image Namespace
   description: The namespace of the OpenShift project containing the imagestream for the application.
@@ -163,4 +159,4 @@ parameters:
   generate: expression
   from: "[a-zA-Z0-9]{16}"
   required: true
-   
+
