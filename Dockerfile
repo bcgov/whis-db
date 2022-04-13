@@ -52,12 +52,10 @@ COPY ./etc-pki-entitlement /etc/pki/entitlement
 COPY ./rhsm-conf /etc/rhsm
 COPY ./rhsm-ca /etc/rhsm/ca
 
-RUN rm /etc/rhsm-host && yum repolist --disablerepo=* && subscriptionmanage
+RUN rm /etc/rhsm-host && yum repolist --disablerepo=*
 
-
-# clear cache
 RUN yum clean all && rm -fr /var/cache/yum/*
-RUN yum repolist && subscription-manager repos --enable  rhel-server-rhscl-7-rpms
+RUN subscription-manager repos --enable rhel-server-rhscl-7-rpms
 
 # are we subscribed?
 RUN subscription-manager list --available --all
