@@ -62,8 +62,7 @@ COPY ./rhsm-ca /etc/rhsm/ca
 # This is a workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1479388
 # Initialize /etc/yum.repos.d/redhat.repo
 # See https://access.redhat.com/solutions/1443553
-RUN rm /etc/rhsm-host && \
-    yum repolist > /dev/null
+RUN rm /etc/rhsm-host
 
 # are we subscribed?
 RUN subscription-manager list --available --all
