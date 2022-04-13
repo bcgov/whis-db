@@ -52,30 +52,22 @@ COPY ./etc-pki-entitlement /etc/pki/entitlement
 COPY ./rhsm-conf /etc/rhsm
 COPY ./rhsm-ca /etc/rhsm/ca
 
-# This image must forever use UID 26 for postgres user so our volumes are
-# safe in the future. This should *never* change, the last test is there
-# to make sure of that.
-# rhel-7-server-ose-3.2-rpms is enabled for nss_wrapper until this pkg is
-# in base RHEL
-#
-# We need to call 2 (!) yum commands before being able to enable repositories properly
-# This is a workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1479388
-# Initialize /etc/yum.repos.d/redhat.repo
-# See https://access.redhat.com/solutions/1443553
-RUN rm /etc/rhsm-host
+RUN rm /etc/rhsm-host && yum repolist --disablerepo=* && subscriptionmanage
+
+
+# clear cache
+RUN yum clean all && rm -fr /var/cache/yum/*
+RUN yum repolist && subscription-manager repos --enable  rhel-server-rhscl-7-rpms
 
 # are we subscribed?
 RUN subscription-manager list --available --all
 
-# clear cache
-RUN yum clean all && rm -fr /var/cache/yum/* && yum repolist && yum update
-
 RUN yum install -y yum-utils gettext
-
-RUN yum-config-manager --disable \* &> /dev/null && \
-    yum-config-manager --enable rhel-server-rhscl-7-rpms && \
-    yum-config-manager --enable rhel-7-server-rpms && \
-    yum-config-manager --enable rhel-7-server-optional-rpms
+#
+#RUN yum-config-manager --disable \* &> /dev/null && \
+#    yum-config-manager --enable rhel-server-rhscl-7-rpms && \
+#    yum-config-manager --enable rhel-7-server-rpms && \
+#    yum-config-manager --enable rhel-7-server-optional-rpms
 
 RUN INSTALL_PKGS="rsync tar gettext bind-utils nss_wrapper" && \
     yum -y --setopt=tsflags=nodocs install $INSTALL_PKGS && \
@@ -112,7 +104,6 @@ COPY root /
 ENV PGCONFIG /opt/rh/rh-postgresql12/root/usr/bin
 ENV PATH /opt/rh/rh-postgresql12/root/usr/bin/:/usr/bin/:${PATH}
 
-# Aquire and build PostGIS 3.1, for PostgreSQL 12.x
 RUN cd /tmp && \
     rpm -ivh https://download.postgresql.org/pub/repos/yum/reporpms/EL-6-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
@@ -128,11 +119,11 @@ RUN /usr/bin/install -c -m 755  /usr/pgsql-12/lib/postgis* '/opt/rh/rh-postgresq
 
 RUN rm -rf /tmp/pgdg-redhat-repo-latest.noarch.rpm /var/cache/yum
 
-# Remove entitlements and Subscription Manager configs
 RUN rm -rf /etc/pki/entitlement && rm -rf /etc/rhsm/rhsm-conf && rm -fr /etc/rhsm/ca
 
 RUN bash /usr/libexec/fix-permissions /var/lib/pgsql
 
+# ensure compatbility with data volumes
 USER 26
 
 EXPOSE ${PORT}
