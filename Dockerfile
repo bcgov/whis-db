@@ -64,7 +64,7 @@ COPY ./rhsm-ca /etc/rhsm/ca
 # See https://access.redhat.com/solutions/1443553
 RUN rm /etc/rhsm-host && \
     yum repolist > /dev/null && \
-    yum install -y yum-utils gettext && \
+    yum install -y yum-utils gettext ca-certificates && \
     yum-config-manager --disable \* &> /dev/null && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-rpms && \
@@ -72,6 +72,8 @@ RUN rm /etc/rhsm-host && \
     INSTALL_PKGS="rsync tar gettext bind-utils nss_wrapper" && \
     yum -y --setopt=tsflags=nodocs install $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS
+
+RUN apt-get install --no-install-recommends --no-install-suggests -y ca-certificates
 
 RUN yum -y clean all --enablerepo='*'
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

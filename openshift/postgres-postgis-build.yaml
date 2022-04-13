@@ -101,15 +101,15 @@ objects:
           ref: main
         secrets:
           - secret:
-              name: etc-pki-entitlement
-            destinationDir: etc-pki-entitlement
+              name: platform-services-controlled-etc-pki-entitlement
+            destinationDir: '/etc/pki/entitlement'
         configMaps:
           - configMap:
               name: rhsm-conf
-            destinationDir: rhsm-conf
+            destinationDir: '/etc/rhsm'
           - configMap:
               name: rhsm-ca
-            destinationDir: rhsm-ca
+            destinationDir: '/etc/rhsm'
       triggers:
       - type: ImageChange
       - type: ConfigChange
