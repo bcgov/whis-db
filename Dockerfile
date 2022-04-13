@@ -73,8 +73,6 @@ RUN rm /etc/rhsm-host && \
     yum -y --setopt=tsflags=nodocs install $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS
 
-RUN apt-get install --no-install-recommends --no-install-suggests -y ca-certificates
-
 RUN yum -y clean all --enablerepo='*'
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN localedef -f UTF-8 -i en_US en_US.UTF-8
