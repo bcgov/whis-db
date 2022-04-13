@@ -65,7 +65,13 @@ COPY ./rhsm-ca /etc/rhsm/ca
 RUN rm /etc/rhsm-host && \
     yum repolist > /dev/null
 
-RUN yum install -y yum-utils gettext ca-certificates
+# are we subscribed?
+RUN subscription-manager list --available --all
+
+# clear cache
+RUN yum clean all && rm -fr /var/cache/yum/* && yum repolist && yum update
+
+RUN yum install -y yum-utils gettext
 
 RUN yum-config-manager --disable \* &> /dev/null && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
