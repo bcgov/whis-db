@@ -52,12 +52,13 @@ COPY ./etc-pki-entitlement /etc/pki/entitlement
 COPY ./rhsm-conf /etc/rhsm
 COPY ./rhsm-ca /etc/rhsm/ca
 
-RUN rm /etc/rhsm-host && yum repolist --disablerepo=*
+RUN find /etc/pki/entitlement
+RUN find /etc/rhsm
 
-RUN yum clean all && rm -fr /var/cache/yum/*
-RUN subscription-manager repos --enable rhel-server-rhscl-7-rpms
-RUN subscription-manager repos --enable rhel-7-server-rpms
-RUN subscription-manager repos --enable rhel-7-server-optional-rpms
+RUN rm /etc/rhsm-host && yum repolist --disablerepo=*
+RUN subscription-manager repos --enable rhel-server-rhscl-7-rpms && \
+    subscription-manager repos --enable rhel-7-server-rpms && \
+    subscription-manager repos --enable rhel-7-server-optional-rpms
 
 RUN yum install -y yum-utils gettext
 #

@@ -102,14 +102,14 @@ objects:
         secrets:
           - secret:
               name: platform-services-controlled-etc-pki-entitlement
-            destinationDir: '/etc/pki/entitlement'
+            destinationDir: etc-pki-entitlement
         configMaps:
           - configMap:
-              name: rhsm-conf
-            destinationDir: '/etc/rhsm'
+              name: platform-services-controlled-rhsm-conf
+            destinationDir: rhsm-conf
           - configMap:
-              name: rhsm-ca
-            destinationDir: '/etc/rhsm'
+              name: platform-services-controlled-rhsm-ca
+            destinationDir: rhsm-ca
       triggers:
       - type: ImageChange
       - type: ConfigChange
