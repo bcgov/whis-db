@@ -56,9 +56,8 @@ RUN rm /etc/rhsm-host && yum repolist --disablerepo=*
 
 RUN yum clean all && rm -fr /var/cache/yum/*
 RUN subscription-manager repos --enable rhel-server-rhscl-7-rpms
-
-# are we subscribed?
-RUN subscription-manager list --available --all
+RUN subscription-manager repos --enable rhel-7-server-rpms
+RUN subscription-manager repos --enable rhel-7-server-optional-rpms
 
 RUN yum install -y yum-utils gettext
 #
